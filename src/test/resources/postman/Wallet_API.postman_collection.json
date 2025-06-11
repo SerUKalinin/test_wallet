@@ -1,0 +1,145 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Wallet API",
+		"description": "Коллекция для тестирования API электронного кошелька",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Выполнение операции с кошельком",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"walletId\": \"11111111-1111-1111-1111-111111111111\",\n    \"amount\": 500.00,\n    \"operationType\": \"DEPOSIT\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/wallet",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "v1", "wallet"]
+				},
+				"description": "Выполняет операцию пополнения или списания средств с кошелька"
+			},
+			"response": [
+				{
+					"name": "Успешное пополнение",
+					"originalRequest": {
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"walletId\": \"11111111-1111-1111-1111-111111111111\",\n    \"amount\": 500.00,\n    \"operationType\": \"DEPOSIT\"\n}"
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"id\": \"11111111-1111-1111-1111-111111111111\",\n    \"balance\": 1500.00\n}"
+				},
+				{
+					"name": "Успешное списание",
+					"originalRequest": {
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"walletId\": \"11111111-1111-1111-1111-111111111111\",\n    \"amount\": 200.00,\n    \"operationType\": \"WITHDRAW\"\n}"
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"id\": \"11111111-1111-1111-1111-111111111111\",\n    \"balance\": 1300.00\n}"
+				},
+				{
+					"name": "Недостаточно средств",
+					"originalRequest": {
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"walletId\": \"11111111-1111-1111-1111-111111111111\",\n    \"amount\": 2000.00,\n    \"operationType\": \"WITHDRAW\"\n}"
+						}
+					},
+					"status": "Conflict",
+					"code": 409,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"message\": \"Недостаточно средств на кошельке\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Получение информации о кошельке",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/wallets/11111111-1111-1111-1111-111111111111",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "v1", "wallets", "11111111-1111-1111-1111-111111111111"]
+				},
+				"description": "Получает информацию о кошельке по его ID"
+			},
+			"response": [
+				{
+					"name": "Успешное получение",
+					"originalRequest": {
+						"method": "GET"
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"id\": \"11111111-1111-1111-1111-111111111111\",\n    \"balance\": 1000.00\n}"
+				},
+				{
+					"name": "Кошелек не найден",
+					"originalRequest": {
+						"method": "GET"
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"message\": \"Кошелек с ID 99999999-9999-9999-9999-999999999999 не найден\"\n}"
+				}
+			]
+		}
+	]
+} 

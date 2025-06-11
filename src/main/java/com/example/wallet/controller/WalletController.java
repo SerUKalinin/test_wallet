@@ -16,15 +16,26 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 /**
- * Контроллер для работы с кошельками
+ * Контроллер для работы с кошельками.
+ * Предоставляет REST API для управления электронными кошельками,
+ * включая операции пополнения, снятия средств и получения информации о кошельке.
  */
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Tag(name = "Wallet Controller", description = "API для управления кошельками")
 public class WalletController {
+    /**
+     * Сервис для работы с кошельками
+     */
     private final WalletService walletService;
 
+    /**
+     * Выполняет операцию с кошельком (пополнение или снятие средств).
+     *
+     * @param request Данные операции, включающие ID кошелька, тип операции и сумму
+     * @return ResponseEntity с информацией о результате операции
+     */
     @PostMapping("/wallet")
     @Operation(summary = "Выполнить операцию с кошельком", 
                description = "Позволяет выполнить операции пополнения или снятия средств с кошелька")
@@ -39,6 +50,12 @@ public class WalletController {
         return ResponseEntity.ok(walletService.performOperation(request));
     }
 
+    /**
+     * Получает информацию о кошельке по его ID.
+     *
+     * @param walletId Уникальный идентификатор кошелька
+     * @return ResponseEntity с информацией о кошельке
+     */
     @GetMapping("/wallets/{walletId}")
     @Operation(summary = "Получить информацию о кошельке", 
                description = "Возвращает текущий баланс и информацию о кошельке")

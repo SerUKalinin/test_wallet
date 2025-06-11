@@ -3,6 +3,7 @@ package com.example.wallet.service;
 import com.example.wallet.dto.WalletOperationRequest;
 import com.example.wallet.dto.WalletResponse;
 import com.example.wallet.exception.InsufficientFundsException;
+import com.example.wallet.mapper.WalletMapper;
 import com.example.wallet.model.OperationType;
 import com.example.wallet.model.Wallet;
 import com.example.wallet.model.WalletTransaction;
@@ -18,20 +19,40 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * Сервис для работы с кошельками
+ * Сервис для работы с кошельками.
+ * Предоставляет бизнес-логику для управления электронными кошельками,
+ * включая операции пополнения, снятия средств и получения информации о кошельке.
+ * Все операции выполняются в рамках транзакций для обеспечения целостности данных.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class WalletService {
+    /**
+     * Репозиторий для работы с кошельками
+     */
     private final WalletRepository walletRepository;
+    
+    /**
+     * Репозиторий для работы с транзакциями
+     */
     private final WalletTransactionRepository transactionRepository;
 
     /**
-     * Выполняет операцию с кошельком
+     * Маппер для преобразования между сущностями и DTO
+     */
+    private final WalletMapper walletMapper;
+
+    /**
+     * Выполняет операцию с кошельком (пополнение или снятие средств).
+     * Операция выполняется в рамках транзакции с блокировкой строки для обеспечения
+     * атомарности и изоляции операций.
      *
-     * @param request запрос на выполнение операции
-     * @return информация о кошельке после операции
+     * @param request запрос на выполнение операции, содержащий ID кошелька,
+     *               тип операции и сумму
+     * @return информация о кошельке после выполнения операции
+     * @throws WalletNotFoundException если кошелек не найден
+     * @throws InsufficientFundsException если недостаточно средств для снятия
      */
     @Transactional
     public WalletResponse performOperation(WalletOperationRequest request) {
@@ -44,7 +65,7 @@ public class WalletService {
         BigDecimal newBalance = calculateNewBalance(wallet.getBalance(), request.getOperationType(), request.getAmount());
         
         if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            log.error("Недостаточно средств на кошельке {} для операции {}", 
+            log.warn("Недостаточно средств на кошельке {} для операции {}",
                     request.getWalletId(), request.getOperationType());
             throw new InsufficientFundsException(request.getWalletId());
         }
@@ -52,24 +73,21 @@ public class WalletService {
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
 
-        WalletTransaction transaction = new WalletTransaction();
-        transaction.setId(UUID.randomUUID());
-        transaction.setWallet(wallet);
-        transaction.setOperationType(request.getOperationType());
-        transaction.setAmount(request.getAmount());
-        transactionRepository.save(transaction);
+        createAndSaveTransaction(wallet, request.getOperationType(), request.getAmount());
 
         log.info("Операция успешно выполнена. Новый баланс кошелька {}: {}", 
                 request.getWalletId(), newBalance);
 
-        return mapToResponse(wallet);
+        return walletMapper.toResponse(wallet);
     }
 
     /**
-     * Получает информацию о кошельке
+     * Получает информацию о кошельке по его ID.
+     * Операция выполняется в режиме только для чтения.
      *
      * @param walletId ID кошелька
      * @return информация о кошельке
+     * @throws WalletNotFoundException если кошелек не найден
      */
     @Transactional(readOnly = true)
     public WalletResponse getWallet(UUID walletId) {
@@ -78,19 +96,37 @@ public class WalletService {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new WalletNotFoundException(walletId));
 
-        return mapToResponse(wallet);
+        return walletMapper.toResponse(wallet);
     }
 
+    /**
+     * Рассчитывает новый баланс кошелька на основе текущего баланса,
+     * типа операции и суммы.
+     *
+     * @param currentBalance текущий баланс кошелька
+     * @param operationType тип операции (пополнение или снятие)
+     * @param amount сумма операции
+     * @return новый баланс кошелька
+     */
     private BigDecimal calculateNewBalance(BigDecimal currentBalance, OperationType operationType, BigDecimal amount) {
         return operationType == OperationType.DEPOSIT
                 ? currentBalance.add(amount)
                 : currentBalance.subtract(amount);
     }
 
-    private WalletResponse mapToResponse(Wallet wallet) {
-        WalletResponse response = new WalletResponse();
-        response.setId(wallet.getId());
-        response.setBalance(wallet.getBalance());
-        return response;
+    /**
+     * Создает и сохраняет транзакцию для указанного кошелька.
+     *
+     * @param wallet кошелек, для которого создается транзакция
+     * @param operationType тип операции (пополнение или снятие)
+     * @param amount сумма операции
+     */
+    private void createAndSaveTransaction(Wallet wallet, OperationType operationType, BigDecimal amount) {
+        WalletTransaction transaction = new WalletTransaction();
+        transaction.setId(UUID.randomUUID());
+        transaction.setWallet(wallet);
+        transaction.setOperationType(operationType);
+        transaction.setAmount(amount);
+        transactionRepository.save(transaction);
     }
 } 

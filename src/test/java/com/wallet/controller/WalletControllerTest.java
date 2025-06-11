@@ -6,6 +6,7 @@ import com.example.wallet.dto.WalletOperationRequest;
 import com.example.wallet.dto.WalletResponse;
 import com.example.wallet.model.OperationType;
 import com.example.wallet.service.WalletService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,7 +24,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Тесты для контроллера кошелька.
+ * Проверяет корректность работы API эндпоинтов для операций с кошельком.
+ */
 @WebMvcTest(WalletController.class)
+@DisplayName("Тесты контроллера кошелька")
 class WalletControllerTest {
 
     @Autowired
@@ -35,7 +41,15 @@ class WalletControllerTest {
     @MockBean
     private WalletService walletService;
 
+    /**
+     * Тест успешного выполнения операции с кошельком.
+     * Проверяет, что при корректном запросе на пополнение кошелька:
+     * - возвращается статус 200 OK
+     * - в ответе содержится корректный ID кошелька
+     * - в ответе содержится корректный баланс
+     */
     @Test
+    @DisplayName("Успешное выполнение операции с кошельком")
     void performOperation_ValidRequest_ReturnsOk() throws Exception {
         UUID walletId = UUID.randomUUID();
         WalletOperationRequest request = new WalletOperationRequest();
@@ -50,14 +64,22 @@ class WalletControllerTest {
         when(walletService.performOperation(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/wallet")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(walletId.toString()))
                 .andExpect(jsonPath("$.balance").value(1000));
     }
 
+    /**
+     * Тест успешного получения информации о кошельке.
+     * Проверяет, что при запросе информации о существующем кошельке:
+     * - возвращается статус 200 OK
+     * - в ответе содержится корректный ID кошелька
+     * - в ответе содержится корректный баланс
+     */
     @Test
+    @DisplayName("Успешное получение информации о кошельке")
     void getWallet_ValidId_ReturnsOk() throws Exception {
         UUID walletId = UUID.randomUUID();
         WalletResponse response = new WalletResponse();
@@ -72,14 +94,20 @@ class WalletControllerTest {
                 .andExpect(jsonPath("$.balance").value(1000));
     }
 
+    /**
+     * Тест обработки некорректного запроса операции с кошельком.
+     * Проверяет, что при отправке запроса без обязательных полей:
+     * - возвращается статус 400 Bad Request
+     */
     @Test
+    @DisplayName("Обработка некорректного запроса операции")
     void performOperation_InvalidRequest_ReturnsBadRequest() throws Exception {
         WalletOperationRequest request = new WalletOperationRequest();
         // Не устанавливаем обязательные поля
 
         mockMvc.perform(post("/api/v1/wallet")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 } 

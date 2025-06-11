@@ -20,7 +20,7 @@
 docker-compose up -d
 ```
 
-Приложение будет доступно по адресу: http://localhost:8080
+Приложение будет доступно по адресу: http://localhost:8081
 
 ## API Endpoints
 

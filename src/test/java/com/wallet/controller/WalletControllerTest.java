@@ -1,10 +1,11 @@
 package com.wallet.controller;
 
+import com.example.wallet.controller.WalletController;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wallet.dto.WalletOperationRequest;
-import com.wallet.dto.WalletResponse;
-import com.wallet.model.OperationType;
-import com.wallet.service.WalletService;
+import com.example.wallet.dto.WalletOperationRequest;
+import com.example.wallet.dto.WalletResponse;
+import com.example.wallet.model.OperationType;
+import com.example.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

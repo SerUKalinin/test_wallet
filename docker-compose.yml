@@ -6,9 +6,9 @@ services:
     container_name: wallet_service_container
     restart: always
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/wallet_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_db:5432/wallet_db
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-dev}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-devpass}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
